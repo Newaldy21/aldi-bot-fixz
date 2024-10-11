@@ -1,7 +1,5 @@
 require('dotenv').config();
 const { getWeb3, walletAddress, switchRpc } = require('./config/web3');
-const { lendAmount } = require('./src/module/minterest/lend');
-const { redeem } = require('./src/module/minterest/redeem');
 const { wrap } = require('./src/module/wrap/wrap');
 const { unwrap } = require('./src/module/wrap/unwrap');
 const BN = require('bn.js');
@@ -13,8 +11,8 @@ function randomGasPrice(web3Instance) {
     return randomGwei;
 }
 
-function randomIterations() {
-    return Math.random() < 0.5 ? 7 : 8; 
+function fixedIterations() {
+    return 38;  
 }
 
 async function getNonce(web3Instance) {
@@ -53,7 +51,7 @@ async function main() {
     let web3Instance = getWeb3();
     const lendRangeMin = 1.0;
     const lendRangeMax = 2.0;
-    const maxIterations = randomIterations();
+    const maxIterations = fixedIterations();
     let iterationCount = 0;
     let localNonce = await getNonce(web3Instance);
 
@@ -73,24 +71,9 @@ async function main() {
             break;
         }
 
-        // Lend
-        let amount = Math.random() * (lendRangeMax - lendRangeMin) + lendRangeMin;
-        amount = Math.floor(amount * 1_000_000);
-        let txHash = await executeTransaction(lendAmount, gasPriceWei, localNonce, amount);
-        if (!txHash) break;
-        localNonce++;
-        let txLink = `https://taikoscan.io/tx/${txHash}`;
-        let amountDecimal = amount / 1_000_000;
-        console.log(`Lend Transaction sent: ${txLink}, \nAmount: ${amountDecimal} USDC \nGwei: ${web3Instance.utils.fromWei(gasPriceWei, 'gwei')} Gwei`);
-
-        // Redeem
-        txHash = await executeTransaction(redeem, gasPriceWei, localNonce);
-        if (!txHash) break;
-        localNonce++;
-        
         // Wrap
-        const wrapAmountMin = 0.0003;
-        const wrapAmountMax = 0.0004;
+        const wrapAmountMin = 0.00003;
+        const wrapAmountMax = 0.00004;
         let wrapAmount = Math.random() * (wrapAmountMax - wrapAmountMin) + wrapAmountMin;
         wrapAmount = parseFloat(wrapAmount.toFixed(6));
         txHash = await executeTransaction(wrap, gasPriceWei, localNonce, wrapAmount);
